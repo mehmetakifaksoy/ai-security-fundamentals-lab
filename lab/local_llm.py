@@ -57,5 +57,5 @@ def generate_answer(query, hits, model="qwen2.5:3b"):
     if not answer:
         raise RuntimeError("Ollama returned no answer. Check the model and retry.")
     if result.get("done_reason") == "length":
-        answer += "\n[Output reached the token limit and may be incomplete.]"
+        answer += "\n(Output reached the token limit and may be incomplete.)"
     return answer

@@ -122,7 +122,13 @@ Compare with the injection experiment:
 .\.venv\Scripts\python.exe -m lab.semantic_search "How does a firewall filter traffic?" --top-k 3 --include-attack --generate
 ```
 
-Inspect whether the answer cites relevant sources and follows the malicious passage. A safe answer in one run does not prove injection resistance. Generated citations and claims are not automatically validated.
+Inspect whether the answer cites relevant sources and follows the malicious passage. A safe answer in one run does not prove injection resistance. Generated claims are not automatically validated.
+
+### Citation label checks
+
+After generation, the application checks bracketed labels against the source IDs retrieved for that request. It accepts `[identity.md#1]` and `[source: identity.md#1]`. Unknown labels such as `[fake.md#99]` and ambiguous numeric labels such as `[1]` trigger warnings. Answers without citations receive a separate warning; this can be appropriate for an abstention.
+
+The original answer is preserved. This simple checker treats bracketed text as a source label; other bracketed prose may therefore produce warnings. Matching labels do not establish factual accuracy, source trustworthiness, citation completeness, or support for the associated claims. For example, an unsupported claim about MFA still passes the label check if it cites a retrieved source ID.
 
 `lab/local_llm.py` calls `http://127.0.0.1:11434/api/chat` with no tools and no system HTTP proxy. No additional Python dependency is needed. This is a local API, not a paid cloud service. Generation uses temperature 0, a 4,096-token context, and a 384-token output limit. Model tags are mutable and generation is not guaranteed deterministic.
 

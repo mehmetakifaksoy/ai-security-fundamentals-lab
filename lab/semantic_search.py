@@ -3,6 +3,7 @@ import argparse
 import json
 
 from lab.common import ROOT, load_chunks, load_model, rank
+from lab.citations import citation_warnings
 from lab.local_llm import generate_answer
 
 
@@ -42,7 +43,16 @@ def main():
     if args.generate:
         print(f"\n--- LOCAL LLM ANSWER ({args.model}) ---", flush=True)
         try:
-            print(generate_answer(args.query, hits, args.model))
+            answer = generate_answer(args.query, hits, args.model)
+            print(answer)
+            print("\n--- CITATION LABEL CHECK ---")
+            warnings = citation_warnings(answer, hits)
+            if warnings:
+                for warning in warnings:
+                    print(f"Warning: {warning}")
+            else:
+                print("All cited labels match retrieved source IDs.")
+            print("This check does not verify factual accuracy or whether sources support the claims.")
         except (RuntimeError, ValueError) as exc:
             parser.exit(1, f"Error: {exc}\n")
 
