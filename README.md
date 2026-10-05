@@ -7,10 +7,10 @@ A hands-on Python lab for embeddings, cosine similarity, semantic search, and RA
 ```text
 Text → tokenizer/model → embedding vector
 Question + document vectors → cosine similarity → nearest paragraphs
-Retrieved paragraphs + question → RAG prompt preview → [future step: LLM answer]
+Retrieved paragraphs + question → prompt/messages → local LLM answer (Ollama)
 ```
 
-This version runs real embedding inference and retrieval. `--rag` builds a prompt with source references; it does not generate an LLM answer. Retrieval and generation are separate steps.
+This version runs real embedding inference and retrieval. `--rag` previews a prompt; `--generate` sends separate system/user messages to a local Ollama model and prints its answer. Retrieval and generation are separate steps.
 
 ## 1. Open the project in VS Code
 
@@ -93,6 +93,42 @@ tests/                    # Integration checks using the real embedding model
 requirements*.txt         # Direct and locked dependencies
 security-notes.md         # Risks, limitations, and trust boundaries
 ```
+
+## Local answer generation with Ollama
+
+Install [Ollama for Windows](https://ollama.com/download/windows), then open a new terminal so the `ollama` command is available. Alternatively:
+
+```powershell
+winget install --id Ollama.Ollama --exact
+```
+
+With Ollama running, download the local model once:
+
+```powershell
+ollama pull qwen2.5:3b
+```
+
+The model download is approximately 1.9 GB, separate from the Ollama installation. The lab was set up on a Windows computer with 16 GB RAM and an NVIDIA RTX 3060 Ti; speed and memory needs vary. If needed, try the smaller `qwen2.5:1.5b` model and pass `--model qwen2.5:1.5b`.
+
+From the project directory, generate a source-grounded answer:
+
+```powershell
+.\.venv\Scripts\python.exe -m lab.semantic_search "How can I prevent account takeover?" --generate
+```
+
+Compare with the injection experiment:
+
+```powershell
+.\.venv\Scripts\python.exe -m lab.semantic_search "How does a firewall filter traffic?" --top-k 3 --include-attack --generate
+```
+
+Inspect whether the answer cites relevant sources and follows the malicious passage. A safe answer in one run does not prove injection resistance. Generated citations and claims are not automatically validated.
+
+`lab/local_llm.py` calls `http://127.0.0.1:11434/api/chat` with no tools and no system HTTP proxy. No additional Python dependency is needed. This is a local API, not a paid cloud service. Generation uses temperature 0, a 4,096-token context, and a 384-token output limit. Model tags are mutable and generation is not guaranteed deterministic.
+
+If Ollama is unavailable, start the application or run `ollama serve` in another terminal. If the model is missing, run `ollama pull qwen2.5:3b`. The client reports connection, timeout, and missing-model errors without silently switching to a cloud provider.
+
+References: [Ollama chat API](https://docs.ollama.com/api/chat), [Windows setup](https://docs.ollama.com/windows), [Qwen2.5 3B model](https://ollama.com/library/qwen2.5:3b).
 
 ## 6. Track and publish changes
 

@@ -2,8 +2,8 @@
 
 ## Trust boundaries
 
-User question → local embedding model → retrieved document paragraphs → prompt preview.
-Documents are data, not trusted instructions. The lab has no external LLM call, shell tool execution, or autonomous actions. The initial installation/model download uses the network; inference runs locally.
+User question → local embedding model → retrieved document paragraphs → prompt preview or local Ollama generation.
+Documents are data, not trusted instructions. With `--generate`, the question and retrieved passages are sent to the loopback Ollama chat API using separate system/user roles. The lab has no shell tool execution or autonomous actions. The initial installation/model downloads use the network; embedding and answer inference run locally. Model files are stored outside the Git repository.
 
 ## Risks and limits
 
@@ -17,5 +17,7 @@ Documents are data, not trusted instructions. The lab has no external LLM call, 
 ## Safe experiment
 
 Run `python -m lab.semantic_search "How does a firewall filter traffic?" --top-k 3 --rag --include-attack`.
-Observe whether the malicious fixture is retrieved. Retrieval is not itself successful injection: no language model is asked to obey it here.
+Observe whether the malicious fixture is retrieved. Retrieval alone is not successful injection. Add `--generate` to inspect how the local model responds to that context; this experiment is not a comprehensive security evaluation.
 Inspect which text is reference data and which instructions belong to the application. Never treat a prompt-only policy as a complete security boundary.
+
+The client uses a fixed loopback endpoint, ignores system HTTP proxies, and rejects model names containing `cloud`. These choices reduce accidental remote use; they do not attest to the integrity or configuration of the installed Ollama server. No tools are passed to the model. Keep Ollama bound to loopback and do not expose it publicly. Source citations, factual correctness, and injection resistance are not automatically verified.
