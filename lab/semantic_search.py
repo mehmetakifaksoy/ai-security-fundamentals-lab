@@ -1,6 +1,7 @@
 """Retrieve paragraphs, preview a RAG prompt, or generate a local Ollama answer."""
 import argparse
 import json
+import math
 
 from lab.common import ROOT, load_chunks, load_model, rank
 from lab.citations import citation_warnings
@@ -21,6 +22,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("query")
     parser.add_argument("--top-k", type=int, default=2)
+    parser.add_argument("--min-score", type=float, default=None,
+                        help="Optional cosine cutoff from -1 to 1; not a trust or confidence score")
     parser.add_argument("--rag", action="store_true", help="Print a prompt; does not generate an answer")
     parser.add_argument("--include-attack", action="store_true", help="Add the synthetic injection fixture")
     parser.add_argument("--generate", action="store_true", help="Generate an answer using local Ollama")
@@ -28,6 +31,8 @@ def main():
     args = parser.parse_args()
     if not args.query.strip() or args.top_k < 1:
         parser.error("query must be nonempty and top-k must be positive")
+    if args.min_score is not None and (not math.isfinite(args.min_score) or not -1 <= args.min_score <= 1):
+        parser.error("min-score must be a finite number from -1 to 1")
     chunks = load_chunks(ROOT / "data" / "knowledge")
     if args.include_attack:
         chunks += load_chunks(ROOT / "data" / "attack")
@@ -35,6 +40,16 @@ def main():
     vectors = model.encode([chunk["text"] for chunk in chunks], normalize_embeddings=True)
     query_vector = model.encode(args.query, normalize_embeddings=True)
     hits = [{**chunks[i], "score": score} for i, score in rank(query_vector, vectors, args.top_k)]
+    if args.min_score is not None:
+        best_score = hits[0]["score"]
+        eligible_hits = [hit for hit in hits if hit["score"] >= args.min_score]
+        print(f"\n--- RETRIEVAL SCORE FILTER (minimum: {args.min_score:.4f}) ---")
+        print(f"Kept {len(eligible_hits)} of {len(hits)} retrieved passages.")
+        hits = eligible_hits
+        if not hits:
+            print(f"No passages met the cutoff. Best cosine score: {best_score:.4f}.")
+            print("Insufficient reference context. Prompt preparation and generation skipped.")
+            return
     for hit in hits:
         print(f"\n[{hit['source']}] cosine={hit['score']:.4f}\n{hit['text']}")
     if args.rag:

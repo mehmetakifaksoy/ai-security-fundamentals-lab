@@ -12,7 +12,7 @@ Documents are data, not trusted instructions. With `--generate`, the question an
 - Never place credentials, customer records, or private project sources in the public sample corpus. Embeddings and logs can expose sensitive information too.
 - `.gitignore` prevents accidental staging of common secret files; it does not scan for secrets or remove previously committed secrets.
 - Model and Python dependencies introduce supply-chain risk. The lab disables remote model code and records exact installed package versions. The model revision is not pinned; this is a learning lab, not a production reproducibility guarantee.
-- The English model and tiny corpus have limited coverage. Top-k always returns nearest items, even for unrelated questions. No confidence threshold has been calibrated.
+- The English model and tiny corpus have limited coverage. Without a cutoff, top-k returns nearest items even for unrelated questions. The optional `--min-score` filters candidates and skips generation when none qualify. The example cutoff is not calibrated, can reject useful evidence, and does not measure confidence or trust. Relevant malicious passages can pass it.
 
 ## Safe experiment
 

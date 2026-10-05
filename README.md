@@ -75,6 +75,21 @@ Documents are split into paragraphs at blank lines (chunking). The question and 
 
 ## 5. Prepare RAG context and explore trust boundaries
 
+### Optional retrieval score cutoff
+
+`--min-score` filters the top-k candidates before prompt preparation and generation. It is disabled by default. Try an illustrative cutoff of `0.30`:
+
+```powershell
+.\.venv\Scripts\python.exe -m lab.semantic_search "How can I prevent account takeover?" --min-score 0.30 --generate
+.\.venv\Scripts\python.exe -m lab.semantic_search "What temperature should I bake a chocolate cake at?" --min-score 0.30 --generate
+```
+
+Only candidates with cosine scores greater than or equal to the cutoff are retained. If none remain, the application reports insufficient reference context and skips both the prompt preview and the Ollama request. Scores must be finite and between -1 and 1.
+
+The example cutoff is not calibrated. Test it against representative queries before choosing a value: a higher cutoff can reject useful passages, and a lower cutoff can admit unrelated ones. This filter does not establish trustworthiness, evidence support, or protection from injection; the attack fixture previously scored `0.4742` and would pass a `0.30` cutoff.
+
+### Prompt preview and injection experiment
+
 ```powershell
 .\.venv\Scripts\python.exe -m lab.semantic_search "What is prompt injection?" --rag
 .\.venv\Scripts\python.exe -m lab.semantic_search "How does a firewall filter traffic?" --top-k 3 --rag --include-attack
