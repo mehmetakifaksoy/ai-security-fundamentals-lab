@@ -184,7 +184,9 @@ The checks verify embedding dimensions and relative similarity, retrieval of a r
 
 ## Learning exercises
 
-See [Initial RAG Evaluation](evaluation.md) for three manually observed cases: relevant retrieval, out-of-corpus abstention, and a synthetic injection experiment. The record separates retrieval behavior, citation label checks, and observed model behavior; it is not a general security certification.
+The introductory learning milestone is complete: embeddings, semantic retrieval, local RAG generation, citation label checks, and an optional retrieval cutoff. The automated suite passed 18 tests.
+
+See [Initial RAG Evaluation](evaluation.md) for five manually observed cases, including a paraphrased query and useful evidence rejected by a higher cutoff. The record separates retrieval behavior, citation label checks, and observed model behavior; it is not a general security certification. The exercises below are optional.
 
 1. Replace the banana sentence with another network-related sentence. Predict how the scores will change before running the example.
 2. Add a Markdown document to `data/knowledge/` and ask a related question using different wording.
