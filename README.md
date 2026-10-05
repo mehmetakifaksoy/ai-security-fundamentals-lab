@@ -1,52 +1,62 @@
 # AI Security Fundamentals Lab
 
-Python ile embedding, cosine similarity, semantic search ve RAG context hazırlama temellerini öğrenmek için küçük bir laboratuvar. Açıklamalar Türkçe, model ve örnek sorgular İngilizce. API anahtarı veya ücretli servis gerekmez.
+A hands-on Python lab for embeddings, cosine similarity, semantic search, and RAG context preparation. Includes a synthetic prompt injection experiment. No API key or paid service is required.
 
-## Akış
+## How it works
 
 ```text
-Metin → tokenizer/model → embedding vektörü
-Soru + belge vektörleri → cosine similarity → en yakın paragraflar
-Paragraflar + soru → RAG prompt önizlemesi → [gelecek adım: LLM cevabı]
+Text → tokenizer/model → embedding vector
+Question + document vectors → cosine similarity → nearest paragraphs
+Retrieved paragraphs + question → RAG prompt preview → [future step: LLM answer]
 ```
 
-Bu sürüm gerçek embedding ve retrieval çalıştırır. `--rag` kaynaklı bir prompt hazırlar; LLM cevabı üretmez. Böylece retrieval ve generation ayrımını görebilirsin.
+This version runs real embedding inference and retrieval. `--rag` builds a prompt with source references; it does not generate an LLM answer. Retrieval and generation are separate steps.
 
-## 1. VS Code ve proje klasörü
+## 1. Open the project in VS Code
 
-Windows PowerShell terminalinde:
+To clone the repository using Windows PowerShell:
+
+```powershell
+git clone https://github.com/mehmetakifaksoy/ai-security-fundamentals-lab.git
+cd ai-security-fundamentals-lab
+code .
+```
+
+If the project already exists in your home directory:
 
 ```powershell
 cd "$HOME\ai-security-fundamentals-lab"
 code .
 ```
 
-VS Code'da **Terminal → New Terminal** aç. `Ctrl+Shift+P` → **Python: Select Interpreter** → `.venv\Scripts\python.exe` seç (Python eklentisi kuruluysa). Dosyaları soldaki Explorer'da açabilirsin.
+In VS Code, select **Terminal → New Terminal**. With the Python extension installed, press `Ctrl+Shift+P`, select **Python: Select Interpreter**, and choose `.venv\Scripts\python.exe` after creating the environment below. Open files in the Explorer panel.
 
-## 2. Virtual environment ve requirements
+Run all commands below from the project directory. Paths beginning with `.\` are relative to your terminal's current directory.
 
-Yeni klon için Python 3.12 kullan:
+## 2. Create a virtual environment and install dependencies
+
+Use Python 3.12 for the validated environment:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
 ```
 
-`.venv` paketleri bu projeye ayırır. `requirements.txt` doğrudan bağımlılığı, `requirements-lock.txt` doğrulanan ortamın tüm paket sürümlerini kaydeder. Linux/macOS için interpreter yolu `.venv/bin/python` olur. Aktivasyon zorunlu değildir; yukarıdaki yol doğru Python'u açıkça seçer.
+`.venv` isolates this project's packages. `requirements.txt` declares the direct dependency; `requirements-lock.txt` records all package versions from the validated environment. On Linux/macOS, use `.venv/bin/python`. Activation is optional because these commands explicitly select the environment's interpreter.
 
-## 3. Embedding benzerliği
+## 3. Compare sentence embeddings
 
-Önce tahmin et: firewall cümlesi hangi cümleye daha yakın olacak?
+Before running the example, predict which sentence will be closest to the firewall sentence.
 
 ```powershell
 .\.venv\Scripts\python.exe -m lab.embedding_similarity
 ```
 
-Model `sentence-transformers/all-MiniLM-L6-v2`, üç metni 384 boyutlu vektörlere çevirir. Normalize edilmiş vektörlerin dot product'ı cosine similarity verir. Sonuç bir olasılık değildir; `0.8`, yüzde 80 doğruluk demek değildir.
+The `sentence-transformers/all-MiniLM-L6-v2` model encodes three sentences as 384-dimensional vectors. For normalized vectors, the dot product equals cosine similarity. A score is not a probability: `0.8` does not mean 80% accuracy.
 
-İlk çalıştırma internetten model indirir; sonraki çalıştırmalar önbelleği kullanır. Paketler ve model birkaç yüz MB disk alanı kullanabilir. Model yüklenirken indirme mesajları normaldir.
+The first run downloads the model from the internet. Later runs use cached model files. Dependencies and model files may occupy several hundred MB of disk space. Download and loading messages are expected.
 
-Doğrulanan örnek çıktı (ortama/model sürümüne göre küçük farklar olabilir):
+Validated example output (small differences may occur across environments or model revisions):
 
 ```text
 Embedding shape: (3, 384)
@@ -55,37 +65,38 @@ Embedding shape: (3, 384)
 2 vs 3: cosine=0.0336
 ```
 
-## 4. Küçük semantic search
+## 4. Search the sample documents
 
 ```powershell
 .\.venv\Scripts\python.exe -m lab.semantic_search "How can I prevent account takeover?"
 ```
 
-Belgeler boş satırlardan paragraflara bölünür (chunking). Soru ve paragraflar aynı modelle kodlanır; en yakın iki paragraf skor ve kaynak kimliğiyle gösterilir. Küçük corpus bellekte tutulur; vector database gerekmez.
+Documents are split into paragraphs at blank lines (chunking). The question and paragraphs are encoded with the same model. The two nearest paragraphs are returned with scores and source IDs. This small corpus stays in memory; no vector database is needed.
 
-## 5. RAG context ve güven sınırı
+## 5. Prepare RAG context and explore trust boundaries
 
 ```powershell
 .\.venv\Scripts\python.exe -m lab.semantic_search "What is prompt injection?" --rag
 .\.venv\Scripts\python.exe -m lab.semantic_search "How does a firewall filter traffic?" --top-k 3 --rag --include-attack
 ```
 
-İkinci komut kasıtlı zararlı bir örnek belge ekler. Skoru yüksek bir belgenin güvenilir olmasının gerekmediğini incele. Önizleme tek metindir; gerçek LLM entegrasyonunda system/user rolleri ayrı mesajlarla gönderilmeli ve yetkiler uygulama tarafından sınırlandırılmalı. Ayrıntılar: [security-notes.md](security-notes.md).
+The second command includes an intentionally malicious sample document. Relevant content can also contain untrusted instructions. The preview is a single string; a real LLM integration should send system and user instructions using their respective message roles and enforce permissions in the application. See [security-notes.md](security-notes.md) for the experiment's limits.
 
-## Yapı
+## Project structure
 
 ```text
-lab/                       # ortak yardımcılar ve iki çalıştırılabilir örnek
-data/knowledge/            # herkese açık, sentetik bilgi paragrafları
-data/attack/               # yalnızca opt-in injection örneği
-.vscode/settings.json     # proje interpreter tercihi
-requirements*.txt         # bağımlılıklar
-security-notes.md          # riskler ve güven sınırları
+lab/                      # Shared helpers and two runnable examples
+data/knowledge/           # Public synthetic reference paragraphs
+data/attack/              # Opt-in prompt injection fixture
+tests/                    # Integration checks using the real embedding model
+.vscode/settings.json     # Project interpreter preference
+requirements*.txt         # Direct and locked dependencies
+security-notes.md         # Risks, limitations, and trust boundaries
 ```
 
-## 6. Git ve GitHub
+## 6. Track and publish changes
 
-İlk oluşturma akışı:
+For a new local project without an existing Git repository or GitHub remote:
 
 ```powershell
 git init -b main
@@ -94,7 +105,7 @@ git commit -m "Add AI security fundamentals learning lab"
 gh repo create ai-security-fundamentals-lab --public --source . --remote origin --push
 ```
 
-Repo zaten kurulmuşsa bunları tekrar çalıştırma. Kendi sonraki değişikliklerin için:
+These commands require Git and an authenticated GitHub CLI session. Skip them if you cloned this repository or it is already initialized. For subsequent changes to your own repository:
 
 ```powershell
 git status
@@ -104,17 +115,22 @@ git commit -m "Explore additional sentence similarities"
 git push
 ```
 
-Commit yerel bir kayıttır; push commit'leri GitHub'a gönderir. `.venv`, cache ve `.env` repoya girmez. Dosya eklemeden önce diff'i oku.
+A commit records changes locally; a push sends commits to GitHub. `.gitignore` excludes the virtual environment, common cache/output directories, and `.env` files. Review your changes before staging them.
 
-## Öğrenme alıştırmaları
+## Validation
 
-Doğrulama: `.\.venv\Scripts\python.exe -m unittest discover -s tests -v`.
-Gerçek modelle boyut/benzerlik, ilgili kaynağın bulunması ve prompt kaynak etiketleri kontrol edilir. Bu kontroller injection dayanıklılığı kanıtı değildir.
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
 
-1. Banana cümlesini başka bir network cümlesiyle değiştir; çalıştırmadan skoru tahmin et.
-2. `data/knowledge/` içine yeni bir Markdown belgesi ekle; farklı kelimelerle ilgili bir soru sor.
-3. Corpus dışı bir yemek tarifi sor; en yakın sonucun yine döndüğünü gözlemle.
-4. `--top-k 1` ve `--top-k 3` ile context miktarını karşılaştır.
-5. Injection örneğini incele: bir belge hangi noktada talimat gibi davranmaya çalışıyor?
+The checks verify embedding dimensions and relative similarity, retrieval of a relevant source, and source labels in the prompt. They do not establish resistance to prompt injection. The first test run may download the model.
 
-Kaynak: [Sentence Transformers resmi quickstart](https://www.sbert.net/docs/quickstart.html).
+## Learning exercises
+
+1. Replace the banana sentence with another network-related sentence. Predict how the scores will change before running the example.
+2. Add a Markdown document to `data/knowledge/` and ask a related question using different wording.
+3. Ask for a recipe outside the corpus. Observe that nearest-neighbor retrieval still returns results.
+4. Compare `--top-k 1` with `--top-k 3` to see how the amount of context changes.
+5. Inspect the injection fixture. Where does the document switch from reference information to an attempted instruction?
+
+Reference: [Sentence Transformers official quickstart](https://www.sbert.net/docs/quickstart.html).
