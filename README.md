@@ -184,6 +184,8 @@ The checks verify embedding dimensions and relative similarity, retrieval of a r
 
 ## Learning exercises
 
+See [Initial RAG Evaluation](evaluation.md) for three manually observed cases: relevant retrieval, out-of-corpus abstention, and a synthetic injection experiment. The record separates retrieval behavior, citation label checks, and observed model behavior; it is not a general security certification.
+
 1. Replace the banana sentence with another network-related sentence. Predict how the scores will change before running the example.
 2. Add a Markdown document to `data/knowledge/` and ask a related question using different wording.
 3. Ask for a recipe outside the corpus. Observe that nearest-neighbor retrieval still returns results.
